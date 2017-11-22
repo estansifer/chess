@@ -1,5 +1,6 @@
 import sys
 import position
+import searchmoves
 
 def piece_symbol(color_piece):
     if color_piece == 0:
@@ -14,7 +15,6 @@ def piece_symbol(color_piece):
 class Human:
     def __init__(self, white):
         self.white = white
-        self.moves = position.Moves()
         self.out = sys.stdout
         self.fin = sys.stdin
         self.name = 'Human'
@@ -88,7 +88,7 @@ class Human:
                 pass
 
     def choose_move(self, gs):
-        ms = self.moves.legal_moves(gs.state)
+        ms = searchmoves.legal_moves(gs.state)
         self.out.write('Turn ' + str((gs.turn + 1) // 2) + '\n')
         self.display_board(gs)
         self.display_moves(gs, [m.name for m in ms] + ['Resign'])
@@ -107,7 +107,6 @@ class Human:
                 self.out.write('  Black won\n')
 
     def show_legality(self, gs, move):
-        print(len(self.moves.all_moves))
         print(self.white)
         gs = gs.copy()
         gs.state = (gs.state & move.check_mask) ^ move.check_result

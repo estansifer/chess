@@ -1,0 +1,8 @@
+{
+ "king": 1000000,
+ "queen": 9,
+ "knight": 3,
+ "rook": 5,
+ "bishop": 3.2,
+ "pawn": 1
+}

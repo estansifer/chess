@@ -1,6 +1,7 @@
 import sys
 import os.path
 import position
+import searchmoves
 
 logging_dir = os.path.join(os.path.dirname(sys.argv[0]), 'logs')
 
@@ -40,7 +41,7 @@ class GameState:
 
     def draw3move(self):
         count = 0
-        mask = position.bits_repition_mask
+        mask = position.bits_repitition_mask
         for old in self.history:
             if (old & mask) == (self.state & mask):
                 count += 1
@@ -56,7 +57,6 @@ class Game:
         self.draw = False
         self.winner = None
         self.players = {True : None, False : None}
-        self.moves = position.Moves()
         self.logging = logging
         if logging:
             self.logout = open(new_log_file(), 'w')
@@ -114,9 +114,9 @@ class Game:
                 self.over = True
                 break
 
-            if len(self.moves.legal_moves(self.gs.state)) == 0:
+            if len(searchmoves.legal_moves(self.gs.state)) == 0:
                 self.over = True
-                if not self.moves.in_check(self.gs.state):
+                if not searchmoves.in_check(self.gs.state):
                     self.draw = True
                 else:
                     self.winner = white

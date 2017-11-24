@@ -14,12 +14,14 @@ def rhash():
 
 hashes = [[rhash() for i in range(mask + 1)] for j in range(64)]
 
-def hashstate(state):
+def hashstate_(state):
     result = 0
     for i in range(64):
         result ^= hashes[i][state & mask]
         state = state >> L
     return result ^ state
+
+hashstate = hash
 
 #
 # Attributes stored at each node:
@@ -52,6 +54,19 @@ class GameTree:
 
     def clearcache(self):
         self.cache = {}
+
+    def rerootcache(self, state):
+        newcache = {}
+        stack = [hashstate(state)]
+        while len(stack) > 0:
+            h = stack.pop()
+            node = self.cache.get(h)
+            if not (node is None):
+                newcache[h] = node
+                if not (node[2] is None):
+                    stack.extend(node[2])
+        print("Reduced cache from {} to {}".format(len(self.cache), len(newcache)))
+        self.cache = newcache
 
     def hashstate(self, state):
         return hashstate(state)

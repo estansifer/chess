@@ -20,6 +20,7 @@ class AIGreedy:
         start = time.process_time()
 
         state = gs.state
+        self.tree.rerootcache(state)
         self.searcheval(state = state, turn = gs.turn)
 
         h = self.tree.hashstate(state)

@@ -8,9 +8,6 @@ class MinMax:
         self.name = 'MinMax'
 
     def value(self, state, turn, depth = 3):
-        if (turn % 5) == 0:
-            self.tree.clearcache()
-
         h = ai.gametree.hashstate(state)
         if h not in self.tree.cache:
             self.tree.insert_node(state, turn)

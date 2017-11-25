@@ -14,6 +14,7 @@ class Move:
         self.capture = None
         self.white = None
         self.name = name
+        self.is_resignation = (name == 'Resign')
 
     def check(self, bit, one):
         if (one == 1) or (one is True):
@@ -184,7 +185,7 @@ class Move:
         return Move('null')
 
     def resign():
-        return Move('resign')
+        return Move('Resign')
 
     def pass_turn(white):
         self = Move('pass')
@@ -265,7 +266,7 @@ class Move:
         return (self.check_mask, self.check_result, ~self.set_zero, self.set_one)
 
 # Except castling
-class AllMoves:
+class BuildMoves:
     def __init__(self):
         self.moves = []
         self.add_piece_moves()
@@ -366,4 +367,4 @@ class AllMoves:
                     if i == 3:
                         add(Move.en_passant(a, a - 7, False))
 
-allmoves = AllMoves()
+allmoves = BuildMoves()

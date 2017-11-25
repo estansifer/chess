@@ -2,16 +2,7 @@ import sys
 import os.path
 import position
 import searchmoves
-
-logging_dir = os.path.join(os.path.dirname(sys.argv[0]), 'logs')
-
-def new_log_file():
-    i = 0
-    while True:
-        path = os.path.join(logging_dir, 'game{:05d}'.format(i))
-        if not os.path.exists(path):
-            return path
-        i += 1
+import logger
 
 class GameState:
     def __init__(self):
@@ -58,60 +49,28 @@ class Game:
         self.winner = None
         self.players = {True : None, False : None}
         self.logging = logging
-        if logging:
-            self.logout = open(new_log_file(), 'w')
+        self.logger = logger.Logger()
 
     def set_players(self, white, black):
         self.players = {True : white, False : black}
-
-    def log(self, msg):
-        if self.logging:
-            self.logout.write(str(msg))
-            self.logout.flush()
-
-    def lognames(self):
-        self.log('{} - {}\n'.format(self.players[True].name, self.players[False].name))
-
-    def logresult(self):
-        if self.over:
-            self.log('\n')
-            if self.draw:
-                self.log('1/2 - 1/2\n')
-            if self.winner is True:
-                self.log('1 - 0\n')
-            if self.winner is False:
-                self.log('0 - 1\n')
-
-    def logmove(self, name):
-        if self.gs.turn % 2 == 0:
-            self.log('  ')
-        else:
-            self.log('\n{:3d}. '.format((self.gs.turn + 1) // 2))
-        while len(name) < 14:
-            name = ' ' + name
-        self.log(name)
-
-    def closelog(self):
-        if self.logging:
-            self.logout.close()
+        self.logger.log_players(self.players)
 
     def play(self):
-        self.lognames()
         while not self.over:
             white = ((self.gs.turn % 2) == 1)
             move = self.players[white].choose_move(self.gs.copy())
-            if move is None:
-                self.logmove('Resign')
+
+            self.gs.apply(move)
+            self.logger.log_move(self.gs.copy())
+
+            if move.is_resignation:
                 self.over = True
                 self.winner = not white
                 break
 
-            self.logmove(move.name)
-            self.gs.apply(move)
-
             if self.gs.draw3move() or self.gs.draw50move():
-                self.draw = True
                 self.over = True
+                self.draw = True
                 break
 
             if len(searchmoves.legal_moves(self.gs.state)) == 0:
@@ -123,5 +82,7 @@ class Game:
 
         self.players[False].game_over(self)
         self.players[True].game_over(self)
-        self.logresult()
-        self.closelog()
+        self.logger.log_result(self.draw, self.winner)
+
+        if self.logging:
+            self.logger.save()

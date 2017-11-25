@@ -11,6 +11,7 @@
 import os
 import os.path
 import json
+import sys
 
 import position
 import searchmoves
@@ -20,7 +21,8 @@ K = 1 << L
 mask = K - 1
 
 def filename(category, index):
-    return os.path.join('params', category, '{:04d}'.format(index))
+    return os.path.join(os.path.dirname(sys.argv[0]), '..', '..',
+            'params', category, '{:04d}'.format(index))
 
 def read_params(fn):
     with open(fn, 'r') as f:

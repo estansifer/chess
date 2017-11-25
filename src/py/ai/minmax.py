@@ -3,6 +3,7 @@ import ai.treesearch
 import ai.gametree
 import ai.evaluator
 import position
+import moves
 import searchmoves
 import time
 
@@ -30,7 +31,7 @@ class AIGreedy:
 
         print("Current board value: ", node[3])
 
-        best_move = None
+        best_move = moves.Move.resign()
         if self.white:
             best_value = -(10 ** 9)
             better = lambda a, b : a > b
@@ -38,9 +39,9 @@ class AIGreedy:
             best_value = 10 ** 9
             better = lambda a, b : a < b
 
-        moves = searchmoves.legal_moves(state)
-        random.shuffle(moves)
-        for move in moves:
+        ms = searchmoves.legal_moves(state)
+        random.shuffle(ms)
+        for move in ms:
             value = self.tree.lookup(move.apply(state))[3]
             if better(value, best_value):
                 best_value = value

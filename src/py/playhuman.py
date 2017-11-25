@@ -1,16 +1,8 @@
 import sys
 import position
+import moves
 import searchmoves
-
-def piece_symbol(color_piece):
-    if color_piece == 0:
-        return '.'
-    piece = color_piece & position.bits_piece_mask
-    if (color_piece & position.bits_white_piece) > 0:
-        return '?KQRBNP?'[piece]
-    if (color_piece & position.bits_black_piece) > 0:
-        return '?kqrbnp?'[piece]
-    return '?'
+import display
 
 class Human:
     def __init__(self, white):
@@ -19,42 +11,10 @@ class Human:
         self.fin = sys.stdin
         self.name = 'Human'
 
-    def display_board(self, gs):
-        def p(s):
-            self.out.write(s + '\n')
-
-        def sq(row, col):
-            return piece_symbol(
-                (gs.state >> position.Square(8 * row + col).bits)
-                    & position.bits_square_mask)
-
-        board = [[' ' for i in range(8 * 2)] for j in range(8 * 2)]
-
-        for i in range(8):
-            for j in range(8):
-                c = '. '[(i + j) % 2]
-                board[i * 2][j * 2] = c
-                board[i * 2 + 1][j * 2] = c
-                board[i * 2][j * 2 + 1] = c
-                board[i * 2 + 1][j * 2 + 1] = c
-                c = sq(7 - i, j)
-                if c != '.':
-                    board[i * 2][j * 2] = c
-
-        if not (gs.last_move is None):
-            p('')
-            p('Previous move: ' + gs.last_move.name)
-
-        p('')
-        for i in range(8):
-            p((' ' * 8) + '  '.join(board[2 * i]))
-            p((' ' * 8) + '  '.join(board[2 * i + 1]))
-            p('')
-
-    def display_moves(self, gs, names):
+    def display_moves(self, gs, ms):
         numcols = 4
         colwidth = 14
-        n = len(names)
+        n = len(ms)
         numrows = ((n - 1) // numcols) + 1
 
         disp = [([''] * numcols) for i in range(numrows)]
@@ -65,7 +25,7 @@ class Human:
                 s = ' ' + s
 
             s += ' '
-            s += names[i]
+            s += ms[i].name
             while len(s) < colwidth:
                 s += ' '
             disp[i % numrows][i // numrows] = s
@@ -88,11 +48,12 @@ class Human:
                 pass
 
     def choose_move(self, gs):
-        ms = searchmoves.legal_moves(gs.state)
+        ms = searchmoves.legal_moves(gs.state) + [moves.Move.resign()]
         self.out.write('Turn ' + str((gs.turn + 1) // 2) + '\n')
-        self.display_board(gs)
-        self.display_moves(gs, [m.name for m in ms] + ['Resign'])
-        ms.append(None)
+        if not (gs.last_move is None):
+            self.out.write('\nPrevious move: ' + gs.last_move.name + '\n')
+        display.print_all(gs.state, out = self.out)
+        self.display_moves(gs, ms)
         k = self.read(len(ms))
         return ms[k]
 
@@ -105,12 +66,3 @@ class Human:
                 self.out.write('  White won\n')
             else:
                 self.out.write('  Black won\n')
-
-    def show_legality(self, gs, move):
-        print(self.white)
-        gs = gs.copy()
-        gs.state = (gs.state & move.check_mask) ^ move.check_result
-        self.display_board(gs)
-        self.out.write(str(gs.state >> position.bits_board_size) + '\n')
-        self.out.write(move.name + '\n')
-        self.out.flush()

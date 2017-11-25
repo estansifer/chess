@@ -3,6 +3,7 @@ import os.path
 import position
 import searchmoves
 import logger
+import timer
 
 class GameState:
     def __init__(self):
@@ -48,6 +49,7 @@ class Game:
         self.draw = False
         self.winner = None
         self.players = {True : None, False : None}
+        self.timers = {True : timer.Timer(), False: timer.Timer()}
         self.logging = logging
         self.logger = logger.Logger()
 
@@ -58,10 +60,12 @@ class Game:
     def play(self):
         while not self.over:
             white = ((self.gs.turn % 2) == 1)
-            move = self.players[white].choose_move(self.gs.copy())
+            gscopy = self.gs.copy()
+            with self.timers[white]:
+                move = self.players[white].choose_move(gscopy)
 
             self.gs.apply(move)
-            self.logger.log_move(self.gs.copy())
+            self.logger.log_move(self.gs.copy(), time = self.timers[white].last())
 
             if move.is_resignation:
                 self.over = True
@@ -83,6 +87,8 @@ class Game:
         self.players[False].game_over(self)
         self.players[True].game_over(self)
         self.logger.log_result(self.draw, self.winner)
+        self.logger.log_note('White time usage: {}'.format(self.timers[True].summary()))
+        self.logger.log_note('Black time usage: {}'.format(self.timers[False].summary()))
 
         if self.logging:
             self.logger.save()

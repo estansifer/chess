@@ -12,6 +12,7 @@ class Logger:
             }
         self.moves = []
         self.result = 'unfinished'
+        self.notes = []
 
     def choose_path(self):
         i = 0
@@ -51,11 +52,15 @@ class Logger:
         if winner is False:
             self.result = '0 - 1'
 
+    def log_note(self, note):
+        self.notes.append(note)
+
     def to_json(self):
         return {
                     'players' : self.players,
                     'moves' : self.moves,
-                    'result' : self.result
+                    'result' : self.result,
+                    'notes' : self.notes
                 }
 
     def save(self):

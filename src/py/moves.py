@@ -4,10 +4,10 @@ class Move:
     def __init__(self, name = 'No name move'):
         # Move is legal if (state & check_mask) == check_result
         # New board state is (state & (bits_state_mask - set_zero)) | set_one
-        self.check_mask = 0
-        self.check_result = 0
-        self.set_zero = 0
-        self.set_one = 0
+        self.check_mask = Z(0)
+        self.check_result = Z(0)
+        self.set_zero = Z(0)
+        self.set_one = Z(0)
         self.piece = None
         self.start = None
         self.end = None
@@ -23,16 +23,16 @@ class Move:
             self.check0(bit)
 
     def check0(self, bit):
-        self.check_mask     |= 1 << bit
-        self.check_result   &= ~(1 << bit)
+        self.check_mask     |= Z(1 << bit)
+        self.check_result   &= Z(~(1 << bit))
 
     def check1(self, bit):
-        self.check_mask     |= 1 << bit
-        self.check_result   |= 1 << bit
+        self.check_mask     |= Z(1 << bit)
+        self.check_result   |= Z(1 << bit)
 
     def check_bits(self, index, length, bits):
-        mask = ((1 << length) - 1) << index
-        bits = (bits << index) & mask
+        mask = Z(((1 << length) - 1) << index)
+        bits = Z((bits << index) & mask)
         self.check_mask     |= mask
         self.check_result   = (self.check_result & (~mask)) | bits
 
@@ -43,16 +43,16 @@ class Move:
             self.set0(bit)
 
     def set0(self, bit):
-        self.set_zero   |= 1 << bit
-        self.set_one    &= ~(1 << bit)
+        self.set_zero   |= Z(1 << bit)
+        self.set_one    &= Z(~(1 << bit))
 
     def set1(self, bit):
-        self.set_zero   &= ~(1 << bit)
-        self.set_one    |= 1 << bit
+        self.set_zero   &= Z(~(1 << bit))
+        self.set_one    |= Z(1 << bit)
 
     def set_bits(self, index, length, bits):
-        mask = ((1 << length) - 1) << index
-        bits = (bits << index) & mask
+        mask = Z(((1 << length) - 1) << index)
+        bits = Z((bits << index) & mask)
         self.set_zero       = (self.set_zero - (self.set_zero & mask)) | (mask - bits)
         self.set_one        = (self.set_one - (self.set_one & mask)) | bits
 
@@ -87,8 +87,8 @@ class Move:
         self.white = white
 
         # Change turn
-        self.check(bits_white_turn, white)
-        self.set(bits_white_turn, not white)
+        self.check(bits_turn, white)
+        self.set(bits_turn, not white)
 
         # Pawn moved?
         self.set(bits_pawn_moved, piece is pawn)
@@ -96,35 +96,40 @@ class Move:
         # Castle rights?
         sn = start.number
         en = end.number
-        if (sn == 60) or (en == 60) or (sn == 63) or (en == 63):
-            self.set0(bits_castle_black_king)
-        if (sn == 60) or (en == 60) or (sn == 56) or (en == 56):
-            self.set0(bits_castle_black_queen)
         if (sn == 4) or (en == 4) or (sn == 7) or (en == 7):
-            self.set0(bits_castle_white_king)
+            self.set0(bits_castle_K)
         if (sn == 4) or (en == 4) or (sn == 0) or (en == 0):
-            self.set0(bits_castle_white_queen)
+            self.set0(bits_castle_Q)
+        if (sn == 60) or (en == 60) or (sn == 63) or (en == 63):
+            self.set0(bits_castle_k)
+        if (sn == 60) or (en == 60) or (sn == 56) or (en == 56):
+            self.set0(bits_castle_q)
 
         # Does piece exist at correct square?
         sb = start.bits
         eb = end.bits
         cp = piece.bits(white)
-        self.check_bits(sb, bits_square_size, cp)
+        self.check_bits(sb, bits_square, cp)
 
         # Does target have correct square?
         if capture:
             if white:
-                self.check_bits(eb + 3, 2, 0b01)
+                self.check_bits(eb + bits_piece, bits_color, 0b01)
             else:
-                self.check_bits(eb + 3, 2, 0b10)
+                self.check_bits(eb + bits_piece, bits_color, 0b10)
         else:
-            self.check_bits(eb, bits_square_size, 0)
+            self.check_bits(eb, bits_square, 0)
 
         # Track squares moved
         self.set_bits(bits_square_from, 6, sn)
         self.set_bits(bits_square_to, 6, en)
-        self.set_bits(sb, bits_square_size, 0)
-        self.set_bits(eb, bits_square_size, cp)
+        self.set_bits(sb, bits_square, 0)
+        self.set_bits(eb, bits_square, cp)
+        if piece is king:
+            if white:
+                self.set_bits(bits_king_white, 6, en)
+            else:
+                self.set_bits(bits_king_black, 6, en)
 
         # Is path clear?
         if not jump:
@@ -154,7 +159,7 @@ class Move:
 
             if step is not None:
                 for i in range(sn + step, en, step):
-                    self.check_bits(Square(i).bits, bits_square_size, 0)
+                    self.check_bits(Square(i).bits, bits_square, 0)
 
         return self
 
@@ -167,18 +172,19 @@ class Move:
         else:
             target = end + 8
 
-        self.check_bits(Square(target).bits, bits_square_size, pawn.bits(not white))
         self.check_bits(bits_square_from, 6, 2 * end - target)
         self.check_bits(bits_square_to, 6, target)
 
         self.set_capture(True)
-        self.set_bits(Square(target).bits, bits_square_size, 0)
+        self.check_bits(Square(target).bits, bits_square, pawn.bits(not white))
+        self.set_bits(Square(target).bits, bits_square, 0)
+
         return self
 
     def promote(start, end, white, capture, new_piece):
         self = Move.basic_move(pawn, start, end, white, capture, True)
         self.name += ' =' + new_piece.symbol
-        self.set_bits(Square(end).bits, bits_square_size, new_piece.bits(white))
+        self.set_bits(Square(end).bits, bits_square, new_piece.bits(white))
         return self
 
     def null():
@@ -190,8 +196,8 @@ class Move:
     def pass_turn(white):
         self = Move('pass')
 
-        self.check(bits_white_turn, white)
-        self.set(bits_white_turn, not white)
+        self.check(bits_turn, white)
+        self.set(bits_turn, not white)
         self.set_capture(False)
         self.white = white
         return self
@@ -217,19 +223,19 @@ class Move:
 
         if kingside:
             if white:
-                self.check1(bits_castle_white_king)
+                self.check1(bits_castle_K)
             else:
-                self.check1(bits_castle_black_king)
+                self.check1(bits_castle_k)
         else:
-            self.check_bits(Square(a - 3).bits, bits_square_size, 0)
+            self.check_bits(Square(a - 3).bits, bits_square, 0)
             if white:
-                self.check1(bits_castle_white_queen)
+                self.check1(bits_castle_Q)
             else:
-                self.check1(bits_castle_black_queen)
+                self.check1(bits_castle_q)
 
-        self.check_bits(Square(b).bits, bits_square_size, rook.bits(white))
-        self.set_bits(Square(b).bits, bits_square_size, 0)
-        self.set_bits(Square(a + c).bits, bits_square_size, rook.bits(white))
+        self.check_bits(Square(b).bits, bits_square, rook.bits(white))
+        self.set_bits(Square(b).bits, bits_square, 0)
+        self.set_bits(Square(a + c).bits, bits_square, rook.bits(white))
 
         nomove = Move.pass_turn(white)
         nomove.start = nomove.end = a
@@ -245,15 +251,15 @@ class Move:
         if type(square) is int:
             square = Square(square)
         self = Move('x' + square.symbol)
-        self.set_bits(square.bits, bits_square_size, 0)
+        self.set_bits(square.bits, bits_square, 0)
         return self
 
     def place_piece(square, piece, white):
         if type(square) is int:
             square = Square(square)
         self = Move(square.symbol + '=' + piece.display(white))
-        self.check_bits(square.bits, bits_square_size, 0)
-        self.set_bits(square.bits, bits_square_size, piece.bits(white))
+        self.check_bits(square.bits, bits_square, 0)
+        self.set_bits(square.bits, bits_square, piece.bits(white))
         return self
 
     def is_legal(self, state):

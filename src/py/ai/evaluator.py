@@ -16,9 +16,8 @@ import sys
 import position
 import searchmoves
 
-L = position.bits_square_size
-K = 1 << L
-mask = K - 1
+L = position.bits_square
+mask = position.mask_square
 
 def filename(category, index):
     return os.path.join(os.path.dirname(sys.argv[0]), '..', '..',
@@ -50,11 +49,11 @@ class SumPiece:
     def default():
         return SumPiece({
                 'king' : 10 ** 6,
-                'queen' : 9,
-                'rook' : 5,
-                'bishop' : 3.2,
-                'knight' : 3,
-                'pawn' : 1
+                'queen' : 90,
+                'rook' : 50,
+                'bishop' : 32,
+                'knight' : 30,
+                'pawn' : 10
             })
 
     def from_file(index = 0):
@@ -64,7 +63,7 @@ class SumPiece:
         to_file(self, index)
 
     def prep(self):
-        self.values = [0] * K
+        self.values = [0] * (1 << L)
         for piece in position.pieces:
             self.values[piece.bits(True)] = self.params[piece.name]
             self.values[piece.bits(False)] = -self.params[piece.name]
@@ -79,7 +78,7 @@ class SumPiece:
 # Given that the current player has no legal moves, determine the outcome of the game
 def game_over_value(state, turn = None):
     if searchmoves.in_check(state):
-        if (state & (1 << position.bits_white_turn)) > 0:
+        if position.white_turn(state):
             return (-(10 ** 9), 10 ** 9)
         else:
             return (10 ** 9, 10 ** 9)

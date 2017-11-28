@@ -3,17 +3,6 @@
 #   Represented as a bit string. Most-to-least significant order below.
 #   Position history is not represented.
 #
-#   # bits  meaning
-#   8       files (a-h) where a pawn double-moved last turn
-#   1       white can castle queenside
-#   1       white can castle kingside
-#   1       black can castle queenside
-#   1       black can castle kingside
-#   1       a pawn was moved last turn
-#   1       a piece was captured last turn
-#   1       white to play
-#   64 x 5  board state
-#
 #   Squares are numbered 0 to 63
 #   A1 0
 #   B1 1
@@ -21,58 +10,74 @@
 #   A2 8
 #   H8 63
 
-bits_piece_size         = 3
-bits_white_piece        = 0b10000
-bits_black_piece        = 0b01000
+import gmpy2
 
-bits_a1                 = 0
-bits_square_size        = 5
-bits_square_mask        = (1 << bits_square_size) - 1
-bits_square_low_mask    = (1 << 4) - 1
-bits_piece_mask         = (1 << 3) - 1
-bits_file_inc           = bits_square_size
-bits_row_inc            = bits_file_inc * 8
-bits_board_size         = bits_row_inc * 8
-bits_board_mask         = (1 << bits_board_size) - 1
+Z = gmpy2.mpz
 
-bits_white_turn         = bits_board_size
-bits_captured           = bits_white_turn + 1
+# Variables named bits_XXX are indices or lengths of bit fields, and are python ints
+
+bits_piece              = 3 # Number of bits to represent a piece
+bits_color              = 2 # Number of bits to represent the color of a piece
+bits_square             = bits_piece + bits_color # Number of bits to store the state of a square
+
+bits_board              = bits_square * 64
+
+bits_turn               = bits_board
+bits_captured           = bits_turn + 1
 bits_pawn_moved         = bits_captured + 1
-bits_castle_black_king  = bits_pawn_moved + 1
-bits_castle_black_queen = bits_castle_black_king + 1
-bits_castle_white_king  = bits_castle_black_queen + 1
-bits_castle_white_queen = bits_castle_white_king + 1
-bits_square_from        = bits_castle_white_queen + 1
+bits_castle             = bits_pawn_moved + 1
+bits_square_from        = bits_castle + 4
 bits_square_to          = bits_square_from + 6
-bits_state_size         = bits_square_to + 6
-bits_state_mask         = (1 << bits_state_size) - 1
+bits_king_white         = bits_square_to + 6
+bits_king_black         = bits_king_white + 6
+bits_biggest            = bits_king_black + 6
+bits_state              = bits_biggest + 1
 
-# technically also need to check for en passant:
-bits_repitition_mask    = (bits_board_mask |
-        (1 << bits_white_turn) | (0b1111 << bits_castle_black_king))
+bits_castle_K           = bits_castle
+bits_castle_Q           = bits_castle + 1
+bits_castle_k           = bits_castle + 2
+bits_castle_q           = bits_castle + 3
+
+
+# Variables named mask_XXX are gmpy2.mpz objects
+mask_board              = Z((1 << bits_board) - 1)
+mask_state              = Z((1 << bits_state) - 1)
+
+mask_white_piece        = Z(0b10000)
+mask_black_piece        = Z(0b01000)
+
+mask_piece              = Z((1 << bits_piece) - 1)
+mask_square_low         = Z((1 << 4) - 1)
+mask_square             = Z((1 << bits_square) - 1)
+
+mask_turn               = Z(1 << bits_turn)
+mask_captured           = Z(1 << bits_captured)
+mask_pawn_moved         = Z(1 << bits_pawn_moved)
+mask_castle             = Z(0b1111 << bits_castle)
+mask_repitition         = mask_board | mask_turn | mask_castle
 
 class Square:
     def __init__(self, number):
-        self.number = number # 0 to 63
-        self.bits = bits_a1 + bits_square_size * number
-        self.symbol = 'abcdefgh'[number % 8] + '12345678'[number // 8]
+        self.number     = Z(number) # 0 to 63
+        self.bits       = bits_square * number
+        self.symbol     = 'abcdefgh'[number % 8] + '12345678'[number // 8]
 
     def by_symbol(symbol):
         return Square((int(symbol[1]) - 1) * 8 + ord(symbol[0].lower()) - ord('a'))
 
 class Piece:
     def __init__(self, name, symbol, number):
-        self.name = name
-        self.symbol = symbol
-        self.number = number
+        self.name       = name
+        self.symbol     = symbol
+        self.number     = Z(number)
 
     def bits(self, white = None):
         if white is None:
             return self.number
         if white:
-            return self.number + bits_white_piece
+            return self.number | mask_white_piece
         else:
-            return self.number + bits_black_piece
+            return self.number | mask_black_piece
 
     def display(self, white):
         if white:
@@ -80,24 +85,29 @@ class Piece:
         else:
             return self.symbol.lower()
 
-king = Piece('king', 'K', 1)
-queen = Piece('queen', 'Q', 2)
-rook = Piece('rook', 'R', 3)
-bishop = Piece('bishop', 'B', 4)
-knight = Piece('knight', 'N', 5)
-pawn = Piece('pawn', 'P', 6)
-pieces = [king, queen, rook, bishop, knight, pawn]
+king        = Piece('king', 'K', 1)
+queen       = Piece('queen', 'Q', 2)
+rook        = Piece('rook', 'R', 3)
+bishop      = Piece('bishop', 'B', 4)
+knight      = Piece('knight', 'N', 5)
+pawn        = Piece('pawn', 'P', 6)
+pieces      = [king, queen, rook, bishop, knight, pawn]
+
+def white_turn(state):
+    return (state & mask_turn) > 0
+
+def captured(state):
+    return (state & mask_captured) > 0
 
 def initial_state():
-    s = [((1 << bits_white_turn) +
-        (1 << bits_castle_black_king) +
-        (1 << bits_castle_black_queen) +
-        (1 << bits_castle_white_king) +
-        (1 << bits_castle_white_queen))]
+    s = [mask_turn |
+            mask_castle |
+            (4 << bits_king_white) |
+            (60 << bits_king_black) |
+            (1 << bits_biggest)]
 
     def place_piece(square, piece, white):
-        bsq = Square(square).bits
-        s[0] = (s[0] & (~(bits_square_mask << bsq))) | (piece.bits(white) << bsq)
+        s[0] |= (piece.bits(white) << Square(square).bits)
 
     place_piece( 0, rook  , True )
     place_piece( 1, knight, True )
@@ -132,4 +142,4 @@ def initial_state():
     place_piece(61, bishop, False)
     place_piece(62, knight, False)
     place_piece(63, rook  , False)
-    return s[0]
+    return Z(s[0])

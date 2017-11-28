@@ -36,7 +36,7 @@ class Logger:
         move = {
                     'turn' : gs.turn - 1,
                     'move' : gs.last_move.name,
-                    'state' : gs.state
+                    'state' : int(gs.state)
                 }
         if not (time is None):
             move['time'] = time

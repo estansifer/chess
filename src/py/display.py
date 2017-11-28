@@ -5,10 +5,10 @@ import searchmoves
 def display_piece(color_piece):
     if color_piece == 0:
         return '.'
-    piece = color_piece & position.bits_piece_mask
-    if (color_piece & position.bits_white_piece) > 0:
+    piece = color_piece & position.mask_piece
+    if (color_piece & position.mask_white_piece) > 0:
         return '?KQRBNP?'[piece]
-    if (color_piece & position.bits_black_piece) > 0:
+    if (color_piece & position.mask_black_piece) > 0:
         return '?kqrbnp?'[piece]
     return '?'
 
@@ -23,7 +23,7 @@ def display_board(state, white = '.', black = ' ', size = 2):
         for j in range(8):
             c = display_piece(
                     (state >> position.Square(8 * (7 - i) + j).bits)
-                    & position.bits_square_mask)
+                    & position.mask_square)
             if c == '.':
                 pieces[i][j] = checkers[i][j]
             else:
@@ -44,21 +44,35 @@ def display_board(state, white = '.', black = ' ', size = 2):
         board = [[[' '] * 6 for j in range(8)] for i in range(8 * 3)]
         for i in range(8):
             for j in range(8):
-                board[3 * i][j][0] = pieces[i][j]
-                board[3 * i][j][3] = checkers[i][j]
+                board[3 * i][j][0] = checkers[i][j]
+                board[3 * i][j][2] = checkers[i][j]
+                board[3 * i][j][4] = checkers[i][j]
                 board[3 * i + 1][j][0] = checkers[i][j]
-                board[3 * i + 1][j][3] = checkers[i][j]
+                board[3 * i + 1][j][2] = pieces[i][j]
+                board[3 * i + 1][j][4] = checkers[i][j]
+                board[3 * i + 2][j][0] = checkers[i][j]
+                board[3 * i + 2][j][2] = checkers[i][j]
+                board[3 * i + 2][j][4] = checkers[i][j]
         return [''.join([''.join(sq) for sq in row]) for row in board]
+    # elif size == 3:
+        # board = [[[' '] * 6 for j in range(8)] for i in range(8 * 3)]
+        # for i in range(8):
+            # for j in range(8):
+                # board[3 * i][j][0] = pieces[i][j]
+                # board[3 * i][j][3] = checkers[i][j]
+                # board[3 * i + 1][j][0] = checkers[i][j]
+                # board[3 * i + 1][j][3] = checkers[i][j]
+        # return [''.join([''.join(sq) for sq in row]) for row in board]
 
 def display_extra_bits(state):
     castling = ''
-    if (state & (1 << position.bits_castle_white_king)) > 0:
+    if (state & (1 << position.bits_castle_K)) > 0:
         castling += 'K'
-    if (state & (1 << position.bits_castle_white_queen)) > 0:
+    if (state & (1 << position.bits_castle_Q)) > 0:
         castling += 'Q'
-    if (state & (1 << position.bits_castle_black_king)) > 0:
+    if (state & (1 << position.bits_castle_k)) > 0:
         castling += 'k'
-    if (state & (1 << position.bits_castle_black_queen)) > 0:
+    if (state & (1 << position.bits_castle_q)) > 0:
         castling += 'q'
 
     start = (state >> position.bits_square_from) & 63

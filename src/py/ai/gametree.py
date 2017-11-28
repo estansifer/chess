@@ -3,25 +3,10 @@ import position
 import searchmoves
 import ai.evaluator
 
-mask = position.bits_square_mask
-L = position.bits_square_size
+mask = position.mask_square
+L = position.bits_square
 legal_moves = searchmoves.legal_moves
 legal_responses = searchmoves.legal_responses
-
-hashlength = 50
-def rhash():
-    return random.randint(0, (1 << hashlength) - 1)
-
-hashes = [[rhash() for i in range(mask + 1)] for j in range(64)]
-
-def hashstate_(state):
-    result = 0
-    for i in range(64):
-        result ^= hashes[i][state & mask]
-        state = state >> L
-    return result ^ state
-
-hashstate = hash
 
 #
 # Attributes stored at each node:
@@ -57,7 +42,7 @@ class GameTree:
 
     def rerootcache(self, state):
         newcache = {}
-        stack = [hashstate(state)]
+        stack = [hash(state)]
         while len(stack) > 0:
             h = stack.pop()
             node = self.cache.get(h)
@@ -68,11 +53,8 @@ class GameTree:
         print("Reduced cache from {} to {}".format(len(self.cache), len(newcache)))
         self.cache = newcache
 
-    def hashstate(self, state):
-        return hashstate(state)
-
     def lookup(self, state):
-        return self.lookup_hash(hashstate(state))
+        return self.lookup_hash(hash(state))
 
     def lookup_hash(self, h):
         return self.cache.get(h, None)
@@ -84,7 +66,7 @@ class GameTree:
             children = legal_responses(parent[0])
             children_hash = []
             for s in children:
-                h2 = hashstate(s)
+                h2 = hash(s)
                 children_hash.append(h2)
                 if h2 not in self.cache:
                     e, q = self.flateval(state = s, turn = turn)
@@ -104,7 +86,7 @@ class GameTree:
         return parent
 
     def insert_node(self, state, turn):
-        h = hashstate(state)
+        h = hash(state)
         if h not in self.cache:
             e, q = self.flateval(state)
             self.cache[h] = [

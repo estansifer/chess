@@ -33,7 +33,7 @@ class GameState:
 
     def draw3move(self):
         count = 0
-        mask = position.bits_repitition_mask
+        mask = position.mask_repitition
         for old in self.history:
             if (old & mask) == (self.state & mask):
                 count += 1

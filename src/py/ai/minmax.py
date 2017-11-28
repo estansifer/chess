@@ -24,7 +24,7 @@ class AIGreedy:
         self.tree.rerootcache(state)
         self.searcheval(state = state, turn = gs.turn)
 
-        h = self.tree.hashstate(state)
+        h = hash(state)
         node = self.tree.cache[h]
         if node[2] is None:
             self.tree.expand_children(h)

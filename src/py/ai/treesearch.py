@@ -8,7 +8,7 @@ class MinMax:
         self.name = 'MinMax'
 
     def value(self, state, turn, depth = 3):
-        h = ai.gametree.hashstate(state)
+        h = hash(state)
         if h not in self.tree.cache:
             self.tree.insert_node(state, turn)
         return self.value_hashed(h, turn, depth)
@@ -46,7 +46,7 @@ class MinMaxQuiescent:
         self.name = 'MinMaxQuiescent'
 
     def value(self, state, turn, depth = 3, noisy_depth = 6):
-        h = ai.gametree.hashstate(state)
+        h = hash(state)
         if h not in self.tree.cache:
             self.tree.insert_node(state, turn)
         return self.value_hashed(h, turn, depth)
@@ -54,7 +54,7 @@ class MinMaxQuiescent:
     def value_hashed(self, h, turn, depth = 3, noisy_depth = 6):
         node = self.tree.cache[h]
 
-        noisy = ((node[0] & (1 << position.bits_captured)) > 0)
+        noisy = position.captured(node[0])
 
         if depth > 0 or (noisy and (noisy_depth > 0)):
             quality = 1020000 + depth + 50

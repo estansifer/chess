@@ -52,7 +52,7 @@ class Human:
         self.out.write('Turn ' + str((gs.turn + 1) // 2) + '\n')
         if not (gs.last_move is None):
             self.out.write('\nPrevious move: ' + gs.last_move.name + '\n')
-        display.print_all(gs.state, out = self.out)
+        display.print_all(gs.state, out = self.out, size = 3)
         self.display_moves(gs, ms)
         k = self.read(len(ms))
         return ms[k]

@@ -85,6 +85,16 @@ class Piece:
         else:
             return self.symbol.lower()
 
+    def by_name(name):
+        for piece in pieces:
+            if piece.name.lower() == name.lower():
+                return piece
+
+    def by_symbol(symbol):
+        for piece in pieces:
+            if piece.symbol.lower() == symbol.lower():
+                return piece
+
 king        = Piece('king', 'K', 1)
 queen       = Piece('queen', 'Q', 2)
 rook        = Piece('rook', 'R', 3)

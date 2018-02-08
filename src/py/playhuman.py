@@ -48,10 +48,10 @@ class Human:
                 pass
 
     def choose_move(self, gs):
-        ms = searchmoves.legal_moves(gs.state) + [moves.Move.resign()]
+        ms = searchmoves.legal_moves(gs.state) + [moves.Move.resign(), moves.Move.undo()]
         self.out.write('Turn ' + str((gs.turn + 1) // 2) + '\n')
-        if not (gs.last_move is None):
-            self.out.write('\nPrevious move: ' + gs.last_move.name + '\n')
+        if len(gs.moves) > 0:
+            self.out.write('\nPrevious move: ' + gs.moves[-1].name + '\n')
         display.print_all(gs.state, out = self.out, size = 3)
         self.display_moves(gs, ms)
         k = self.read(len(ms))

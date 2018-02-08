@@ -154,8 +154,35 @@ class VerifyCheck:
         return self.illegal_check(moves.Move.pass_turn(white).apply(state))
 
 _vc = VerifyCheck()
-illegal_check = _vc.illegal_check
+illegal_check1 = _vc.illegal_check
 in_check = _vc.in_check
+
+
+class VerifyCheck2:
+    def __init__(self):
+        captures_rev = _l2_64()
+        for move in _am:
+            if move.piece is position.king:
+                continue
+            if move.capture:
+                a, b, c, d = move.get4()
+                captures_rev[move.white][move.end].append((a, b))
+        import incheck
+        self.white = incheck.IllegalCheck(captures_rev[True], position.bits_king_black)
+        self.black = incheck.IllegalCheck(captures_rev[False], position.bits_king_white)
+
+    def illegal_check(self, state):
+        white = position.white_turn(state)
+
+        if white:
+            return self.white.illegal_check(state)
+        else:
+            return self.black.illegal_check(state)
+
+_vc2 = VerifyCheck2()
+illegal_check2 = _vc2.illegal_check
+
+illegal_check = illegal_check2
 
 def legal_moves_no_check(state):
     return castles(state) + regular_moves(state)

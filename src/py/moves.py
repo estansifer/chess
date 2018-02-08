@@ -15,6 +15,7 @@ class Move:
         self.white = None
         self.name = name
         self.is_resignation = (name == 'Resign')
+        self.is_undo = (name == 'Undo')
 
     def check(self, bit, one):
         if (one == 1) or (one is True):
@@ -192,6 +193,9 @@ class Move:
 
     def resign():
         return Move('Resign')
+
+    def undo():
+        return Move('Undo')
 
     def pass_turn(white):
         self = Move('pass')

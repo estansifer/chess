@@ -8,28 +8,22 @@ import searchmoves
 import time
 
 class AIGreedy:
-    def __init__(self, white, flateval, searcheval, name):
+    def __init__(self, white, evaluator, name):
         self.white = white
-        self.flateval = flateval
         self.name = name
         self.tree = ai.gametree.GameTree()
-        self.tree.set_flatevaluator(flateval)
-        self.searcheval = searcheval(self.tree).value
+        self.evaluator = evaluator
         self.total_time = 0
 
     def choose_move(self, gs):
         start = time.process_time()
 
-        state = gs.state
-        self.tree.rerootcache(state)
-        self.searcheval(state = state, turn = gs.turn)
+        t = self.tree.tree
+        t.clear_states()
+        n = t.add_state(gs.state, gs.turn)
+        self.evaluator(self.tree, n)
 
-        h = hash(state)
-        node = self.tree.cache[h]
-        if node[2] is None:
-            self.tree.expand_children(h)
-
-        print("Current board value: ", node[3])
+        print("Current board value: ", t.value(n))
 
         best_move = moves.Move.resign()
         if self.white:
@@ -42,35 +36,33 @@ class AIGreedy:
         ms = searchmoves.legal_moves(state)
         random.shuffle(ms)
         for move in ms:
-            value = self.tree.lookup(move.apply(state))[3]
-            if better(value, best_value):
-                best_value = value
-                best_move = move
+            k = t.find_state(move.apply(gs.state), gs.turn + 1)
+            if k >= 0:
+                value = t.value(k)
+                if better(value, best_value):
+                    best_value = value
+                    best_move = move
 
         end = time.process_time()
         self.total_time += (end - start)
 
+        print("Nodes examined: ", t.number_nodes())
+
         return best_move
 
     def game_over(self, game):
-        print("Nodes searched in game tree: ", len(self.tree.cache))
         print("Total time used (s): ", self.total_time)
-        print("Time per node (us): ", 1000000 * self.total_time / (len(self.tree.cache) + 1))
 
 def ai_minmax(white):
-    flateval = ai.evaluator.SumPiece.from_file(0)
     return AIGreedy(
             white,
-            flateval.value,
             ai.treesearch.MinMax,
             'AI_MinMax_3_S_0'
         )
 
 def ai_minmax_quiescent(white):
-    flateval = ai.evaluator.SumPiece.from_file(0)
     return AIGreedy(
             white,
-            flateval.value,
             ai.treesearch.MinMaxQuiescent,
-            'AI_MinMaxQuiescent_3_6_S_0'
+            'AI_MinMaxQuiescent_3_8_S_0'
         )

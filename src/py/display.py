@@ -64,7 +64,7 @@ def display_board(state, white = '.', black = ' ', size = 2):
                 # board[3 * i + 1][j][3] = checkers[i][j]
         # return [''.join([''.join(sq) for sq in row]) for row in board]
 
-def display_extra_bits(state):
+def display_extra_bits(state, extra = False):
     castling = ''
     if (state & (1 << position.bits_castle_K)) > 0:
         castling += 'K'
@@ -81,10 +81,17 @@ def display_extra_bits(state):
             position.Square(start).symbol,
             position.Square(end).symbol)
 
+    more = ''
+    if extra:
+        more = '\nKings: '
+        more += position.Square((state >> position.bits_king_white) & 63).symbol
+        more += ', '
+        more += position.Square((state >> position.bits_king_black) & 63).symbol
+
     if castling == '':
-        return status + 'No castling rights.'
+        return status + 'No castling rights.' + more
     else:
-        return status + 'Can castle: ' + castling
+        return status + 'Can castle: ' + castling + more
 
 def print_board(state, white = '.', black = ' ', size = 2, out = sys.stdout):
     board = display_board(state, white, black, size)
@@ -93,11 +100,11 @@ def print_board(state, white = '.', black = ' ', size = 2, out = sys.stdout):
     out.write('\n')
     out.flush()
 
-def print_all(state, white = '.', black = ' ', size = 2, out = sys.stdout):
+def print_all(state, white = '.', black = ' ', size = 2, out = sys.stdout, extra = False):
     print_board(state, white, black, size)
-    out.write(display_extra_bits(state) + '\n\n')
+    out.write(display_extra_bits(state, extra) + '\n\n')
     out.flush()
 
 if __name__ == "__main__":
     state = int(sys.argv[1])
-    print_all(state)
+    print_all(state, extra = True)

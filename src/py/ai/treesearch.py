@@ -3,79 +3,80 @@ import ai.gametree
 import position
 
 class MinMax:
-    def __init__(self, tree):
-        self.tree = tree
+    def __init__(self, evaluator, depth = 3):
         self.name = 'MinMax'
+        self.evaluator = evaluator
+        self.depth = depth
 
-    def value(self, state, turn, depth = 3):
-        h = hash(state)
-        if h not in self.tree.cache:
-            self.tree.insert_node(state, turn)
-        return self.value_hashed(h, turn, depth)
+    def evaluate(self, tree, n):
+        self.recurse(self, tree, n, self.depth)
 
-    def value_hashed(self, h, turn, depth = 3):
-        node = self.tree.cache[h]
+    def recurse(self, tree, n, depth):
+        if depth == 0:
+            self.evaluator(tree, n)
+        else:
+            tree.expand_children(n)
+            t = tree.tree
 
-        if depth > 0:
-            quality = 1010000 + depth
-            if quality > node[4]:
-                self.tree.expand_children(h)
-
-                if len(node[2]) > 0:
-                    values = []
-                    for child in node[2]:
-                        e, q = self.value_hashed(child, turn + 1, depth - 1)
-                        values.append(e)
-
-                    if (turn % 2) == 0:
-                        node[3] = min(values)
-                    else:
-                        node[3] = max(values)
-
-                    node[4] = quality
+            c = t.child(n)
+            if c == -2:
+                ai.evaluator.gameover.evaluate(tree, n)
+            else:
+                white = (t.turn(n) % 2 == 1)
+                if white:
+                    best = -(10 ** 9)
                 else:
-                    e, q = ai.evaluator.game_over_value(node[0])
-                    node[3] = e
-                    node[4] = q
+                    best = 10 ** 9
 
-        return (node[3], node[4])
+                while c != -1:
+                    self.recurse(tree, c, depth - 1)
+                    val = t.value(c)
+                    if white:
+                        best = max(best, val)
+                    else:
+                        best = min(best, val)
+                    c = t.sibling(c)
+
+                t.set_value(n, best, 10000 + depth)
 
 class MinMaxQuiescent:
-    def __init__(self, tree):
-        self.tree = tree
+    def __init__(self, evaluator, depth = 3, noisy_depth = 8):
         self.name = 'MinMaxQuiescent'
+        self.evaluator = evaluator
+        self.depth = depth
+        self.noisy_depth = noisy_depth
 
-    def value(self, state, turn, depth = 3, noisy_depth = 6):
-        h = hash(state)
-        if h not in self.tree.cache:
-            self.tree.insert_node(state, turn)
-        return self.value_hashed(h, turn, depth)
+    def evaluate(self, tree, n):
+        self.thresh1 = tree.tree.turn(n) + self.depth
+        self.thresh2 = tree.tree.turn(n) + self.noisy_depth
+        self.recurse(self, tree, n)
 
-    def value_hashed(self, h, turn, depth = 3, noisy_depth = 6):
-        node = self.tree.cache[h]
+    def recurse(self, tree, n):
+        t = tree.tree
+        turn = t.turn(n)
+        if (turn >= self.thresh2) or
+                ((turn >= self.thresh1) and (t.noisy(n) == 0)):
+            self.evaluator(tree, n)
+        else:
+            tree.expand_children(n)
 
-        noisy = position.captured(node[0])
-
-        if depth > 0 or (noisy and (noisy_depth > 0)):
-            quality = 1020000 + depth + 50
-            if quality > node[4]:
-                self.tree.expand_children(h)
-
-                if len(node[2]) > 0:
-                    values = []
-                    for child in node[2]:
-                        e, q = self.value_hashed(child, turn + 1, depth - 1, noisy_depth - 1)
-                        values.append(e)
-
-                    if (turn % 2) == 0:
-                        node[3] = min(values)
-                    else:
-                        node[3] = max(values)
-
-                    node[4] = quality
+            c = t.child(n)
+            if c == -2:
+                ai.evaluator.gameover.evaluate(tree, n)
+            else:
+                white = (t.turn(n) % 2 == 1)
+                if white:
+                    best = -(10 ** 9)
                 else:
-                    e, q = ai.evaluator.game_over_value(node[0])
-                    node[3] = e
-                    node[4] = q
+                    best = 10 ** 9
 
-        return (node[3], node[4])
+                while c != -1:
+                    self.recurse(tree, c)
+                    val = t.value(c)
+                    if white:
+                        best = max(best, val)
+                    else:
+                        best = min(best, val)
+                    c = t.sibling(c)
+
+                t.set_value(n, best, 20000 + depth)

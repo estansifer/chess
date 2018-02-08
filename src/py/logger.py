@@ -35,7 +35,7 @@ class Logger:
     def log_move(self, gs, time = None, annotation = None):
         move = {
                     'turn' : gs.turn - 1,
-                    'move' : gs.last_move.name,
+                    'move' : gs.moves[-1].name,
                     'state' : int(gs.state)
                 }
         if not (time is None):

@@ -8,39 +8,46 @@ import timer
 class GameState:
     def __init__(self):
         self.state = position.initial_state()
-        self.last_move = None
-        self.turn = 1 # odd means white is about to play
-        self.last_capture = 0
-        self.history = [self.state]
+        self.states = [self.state]
+        self.moves = []
+        self.turn = len(self.states)
 
     def copy(self):
         c = GameState()
         c.state = self.state
-        c.last_move = self.last_move
+        c.moves = list(self.moves)
+        c.states = list(self.states)
         c.turn = self.turn
-        c.last_capture = self.last_capture
-        c.history = list(self.history)
         return c
 
     def apply(self, move):
-        self.last_move = move
-        new = move.apply(self.state)
-        self.state = new
-        if (move.piece is position.pawn) or move.capture:
-            self.last_capture = self.turn
+        self.state = move.apply(self.state)
+        self.states.append(self.state)
+        self.moves.append(move)
         self.turn += 1
-        self.history.append(new)
+
+    def rewind(self, steps = 2):
+        self.turn = max(self.turn - steps, 1)
+        self.states = self.states[:self.turn]
+        self.moves = self.moves[:self.turn - 1]
+        self.state = self.states[-1]
 
     def draw3move(self):
         count = 0
         mask = position.mask_repitition
-        for old in self.history:
+        for old in self.states:
             if (old & mask) == (self.state & mask):
                 count += 1
         return count >= 3
 
+    # May have off-by-1 error, didn't bother checking
     def draw50move(self):
-        return self.turn > self.last_capture + 100
+        if self.turn > 101:
+            for move in self.moves[-100:]:
+                if (move.piece is position.pawn) or move.capture:
+                    return False
+            return True
+        return False
 
 class Game:
     def __init__(self, logging = True):
@@ -64,13 +71,17 @@ class Game:
             with self.timers[white]:
                 move = self.players[white].choose_move(gscopy)
 
-            self.gs.apply(move)
-            self.logger.log_move(self.gs.copy(), time = self.timers[white].last())
-
             if move.is_resignation:
                 self.over = True
                 self.winner = not white
                 break
+
+            if move.is_undo:
+                self.gs.rewind(2)
+            else:
+                self.gs.apply(move)
+
+            self.logger.log_move(self.gs.copy(), time = self.timers[white].last())
 
             if self.gs.draw3move() or self.gs.draw50move():
                 self.over = True

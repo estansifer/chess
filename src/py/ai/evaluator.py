@@ -14,10 +14,10 @@ import json
 import sys
 
 import position
+import moves
 import searchmoves
-
-L = position.bits_square
-mask = position.mask_square
+import cevaluator
+import legalmoves
 
 def filename(category, index):
     return os.path.join(os.path.dirname(sys.argv[0]), '..', '..',
@@ -39,48 +39,83 @@ def from_file(cls, index = 0):
 def to_file(e, index = 0):
     write_params(filename(e.category, index), e.params)
 
-class SumPiece:
-    category = 'piece'
-    def __init__(self, params):
+class CEval1:
+    category = 'eval1'
+    def __init__(self, params = None):
+        if params is None:
+            params = CEval1.default_params()
         self.params = params
         self.prep()
-        self.name = 'P'
 
-    def default():
-        return SumPiece({
-                'king' : 10 ** 6,
-                'queen' : 90,
-                'rook' : 50,
-                'bishop' : 32,
-                'knight' : 30,
-                'pawn' : 10
-            })
+    def default_params():
+        values = {}
+        values['king'] = [10 ** 6] * 64
 
-    def from_file(index = 0):
-        return from_file(SumPiece, index)
+        reg_pieces = [
+                    (position.bishop, 320, 0.15),
+                    (position.knight, 300, 0.15),
+                    (position.rook, 500, 0.05),
+                    (position.queen, 900, 0.01)
+                ]
 
-    def to_file(self, index = 0):
-        to_file(self, index)
+        move_counts = {}
+        for piece, a, b in reg_pieces:
+            move_counts[piece.name] = [0] * 64
+
+        for move in moves.allmoves.moves:
+            if (move.piece.name in move_counts) and move.white:
+                move_counts[move.piece.name][move.start] += 1
+
+        for piece, a, b in reg_pieces:
+            least = 99999
+            most = 0
+            for i in range(64):
+                least = min(least, move_counts[piece.name][i])
+                most = max(most, move_counts[piece.name][i])
+
+            values[piece.name] = [0] * 64
+            for i in range(64):
+                k = move_counts[piece.name][i]
+                if most == least:
+                    v = a
+                else:
+                    v = a + a * b * (k - least) / (most - least)
+                values[piece.name][i] = int(v)
+
+        pcolmult = [1.00, 1.10, 1.20, 1.30, 1.30, 1.20, 1.10, 1.00]
+        prowmult = [1.00, 1.00, 1.10, 1.25, 1.45, 1.90, 2.50, 1.00]
+        for i in range(8):
+            for j in range(8):
+                values['pawn'][j * 8 + i] = int(100 * pcolmult[i] * prowmult[j])
+
+        return values
 
     def prep(self):
-        self.values = [0] * (1 << L)
+        values = [[0 for j in range(16)] for i in range(64)]
         for piece in position.pieces:
-            self.values[piece.bits(True)] = self.params[piece.name]
-            self.values[piece.bits(False)] = -self.params[piece.name]
+            for row in range(8):
+                for col in range(8):
+                    i = row * 8 + col
+                    i_ = (7 - row) * 8 + col
+                    v = self.params[piece.name][i]
+                    values[i][piece.bits(True) & 0b1111] = v
+                    values[i_][piece.bits(False) & 0b1111] = v
 
-    def value(self, state, turn = None):
-        v = 0
-        for i in range(64):
-            v += self.values[state & mask]
-            state = state >> L
-        return (v, 1)
+        self.ceval = cevaluator.Eval1(values)
 
-# Given that the current player has no legal moves, determine the outcome of the game
-def game_over_value(state, turn = None):
-    if searchmoves.in_check(state):
-        if position.white_turn(state):
-            return (-(10 ** 9), 10 ** 9)
-        else:
-            return (10 ** 9, 10 ** 9)
-    else:
-        return (0, 10 ** 9)
+    def evaluate(self, tree, n):
+        self.ceval.evaluate(tree.tree, n)
+
+class GameOverEval:
+    # Should only be called if the specified node has no child nodes (i.e., no legal moves)
+    def evaluate(self, tree, n):
+        t = tree.tree
+        if t.child(n) == -2:
+            if tree.in_check(n):
+                if t.turn(n) % 2 == 0:
+                    t.set_value(n, 10 ** 8, 10 ** 8)
+                else:
+                    t.set_value(n, -(10 ** 8), 10 ** 8)
+            t.set_value(n, 0, 10 ** 8)
+
+gameover = GameOverEval()

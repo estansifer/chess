@@ -1,10 +1,11 @@
 import random
 import sys
-import game
+
+import core.game
 import players
 
 def play_game(white, black):
-    g = game.Game()
+    g = core.game.Game()
     g.set_players(white(True), black(False))
     g.play()
 

@@ -1,13 +1,14 @@
 import sys
 import os.path
-import position
-import searchmoves
+
+import core.position as pos
+import core.searchmoves
 import logger
 import timer
 
 class GameState:
     def __init__(self):
-        self.state = position.initial_state()
+        self.state = pos.initial_state()
         self.states = [self.state]
         self.moves = []
         self.turn = len(self.states)
@@ -34,7 +35,7 @@ class GameState:
 
     def draw3move(self):
         count = 0
-        mask = position.mask_repitition
+        mask = pos.mask_repitition
         for old in self.states:
             if (old & mask) == (self.state & mask):
                 count += 1
@@ -44,7 +45,7 @@ class GameState:
     def draw50move(self):
         if self.turn > 101:
             for move in self.moves[-100:]:
-                if (move.piece is position.pawn) or move.capture:
+                if (move.piece is pos.pawn) or move.capture:
                     return False
             return True
         return False
@@ -88,9 +89,9 @@ class Game:
                 self.draw = True
                 break
 
-            if len(searchmoves.legal_moves(self.gs.state)) == 0:
+            if len(core.searchmoves.legal_moves(self.gs.state)) == 0:
                 self.over = True
-                if not searchmoves.in_check(self.gs.state):
+                if not core.searchmoves.in_check(self.gs.state):
                     self.draw = True
                 else:
                     self.winner = white

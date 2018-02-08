@@ -1,4 +1,4 @@
-from position import *
+from core.position import *
 
 class Move:
     def __init__(self, name = 'No name move'):

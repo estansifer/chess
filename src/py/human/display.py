@@ -1,14 +1,14 @@
 import sys
-import position
-import searchmoves
+
+import core.position as pos
 
 def display_piece(color_piece):
     if color_piece == 0:
         return '.'
-    piece = color_piece & position.mask_piece
-    if (color_piece & position.mask_white_piece) > 0:
+    piece = color_piece & pos.mask_piece
+    if (color_piece & pos.mask_white_piece) > 0:
         return '?KQRBNP?'[piece]
-    if (color_piece & position.mask_black_piece) > 0:
+    if (color_piece & pos.mask_black_piece) > 0:
         return '?kqrbnp?'[piece]
     return '?'
 
@@ -22,8 +22,8 @@ def display_board(state, white = '.', black = ' ', size = 2):
     for i in range(8):
         for j in range(8):
             c = display_piece(
-                    (state >> position.Square(8 * (7 - i) + j).bits)
-                    & position.mask_square)
+                    (state >> pos.Square(8 * (7 - i) + j).bits)
+                    & pos.mask_square)
             if c == '.':
                 pieces[i][j] = checkers[i][j]
             else:
@@ -66,27 +66,27 @@ def display_board(state, white = '.', black = ' ', size = 2):
 
 def display_extra_bits(state, extra = False):
     castling = ''
-    if (state & (1 << position.bits_castle_K)) > 0:
+    if (state & (1 << pos.bits_castle_K)) > 0:
         castling += 'K'
-    if (state & (1 << position.bits_castle_Q)) > 0:
+    if (state & (1 << pos.bits_castle_Q)) > 0:
         castling += 'Q'
-    if (state & (1 << position.bits_castle_k)) > 0:
+    if (state & (1 << pos.bits_castle_k)) > 0:
         castling += 'k'
-    if (state & (1 << position.bits_castle_q)) > 0:
+    if (state & (1 << pos.bits_castle_q)) > 0:
         castling += 'q'
 
-    start = (state >> position.bits_square_from) & 63
-    end = (state >> position.bits_square_to) & 63
+    start = (state >> pos.bits_square_from) & 63
+    end = (state >> pos.bits_square_to) & 63
     status = 'Last move {} to {}. '.format(
-            position.Square(start).symbol,
-            position.Square(end).symbol)
+            pos.Square(start).symbol,
+            pos.Square(end).symbol)
 
     more = ''
     if extra:
         more = '\nKings: '
-        more += position.Square((state >> position.bits_king_white) & 63).symbol
+        more += pos.Square((state >> pos.bits_king_white) & 63).symbol
         more += ', '
-        more += position.Square((state >> position.bits_king_black) & 63).symbol
+        more += pos.Square((state >> pos.bits_king_black) & 63).symbol
 
     if castling == '':
         return status + 'No castling rights.' + more

@@ -1,9 +1,9 @@
-import playhuman
+import human.playhuman
 import ai.random
 import ai.minmax
 
 random = ai.random.AIRandom
-human = playhuman.Human
+human = human.playhuman.Human
 minmax = ai.minmax.ai_minmax
 minmaxq = ai.minmax.ai_minmax_quiescent
 

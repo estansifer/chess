@@ -1,5 +1,5 @@
-import position
-import moves
+import core.position as pos
+import core.moves
 
 #
 # All functions take the current state as an argument
@@ -12,20 +12,20 @@ import moves
 #                       current position, including illegally entering check
 #
 
-_am = moves.allmoves.moves
+_am = core.moves.allmoves.moves
 
 _l64_16 = lambda : [[[] for i in range(16)] for j in range(64)]
 _l64 = lambda : [[] for j in range(64)]
 _l2_64_16 = lambda : {True : _l64_16(), False : _l64_16()}
 _l2_64 = lambda : {True : _l64(), False : _l64()}
 
-_mask = position.mask_square_low
-_L = position.bits_square
+_mask = pos.mask_square_low
+_L = pos.bits_square
 
 class CastleMove:
     def __init__(self, kingside, white):
         self.white = white
-        move, inbetweens = moves.Move.castle(kingside, white)
+        move, inbetweens = core.moves.Move.castle(kingside, white)
         self.move = move
         a, b = move.get4()[:2]
         c, d, e = self.potential_captures(inbetweens[0])
@@ -84,12 +84,12 @@ class RegMoves:
             self.moves[white][move.start][piece].append(move)
 
     def search(self, state):
-        white = position.white_turn(state)
+        white = pos.white_turn(state)
 
         m = self.moves[white]
 
         ms = []
-        s = state & position.mask_board
+        s = state & pos.mask_board
         for i in range(64):
             for move in m[i][s & _mask]:
                 if move.is_legal(state):
@@ -108,12 +108,12 @@ class RegMovesFast:
             self.moves[white][move.start][piece].append(move.get4())
 
     def search(self, state):
-        white = position.white_turn(state)
+        white = pos.white_turn(state)
 
         m = self.moves[white]
 
         ns = []
-        s = state & position.mask_board
+        s = state & pos.mask_board
         for i in range(64):
             for a, b, c, d in m[i][s & _mask]:
                 if (state & a) == b:
@@ -127,20 +127,20 @@ class VerifyCheck:
     def __init__(self):
         self.captures_rev = _l2_64()
         for move in _am:
-            if move.piece is position.king:
+            if move.piece is pos.king:
                 continue
             if move.capture:
                 a, b, c, d = move.get4()
                 self.captures_rev[move.white][move.end].append((a, b))
 
     def illegal_check(self, state):
-        white = position.white_turn(state)
+        white = pos.white_turn(state)
 
         ms = self.captures_rev[white]
 
-        k = position.king.bits(not white) & _mask
+        k = pos.king.bits(not white) & _mask
 
-        s = state & position.mask_board
+        s = state & pos.mask_board
         for i in range(64):
             if (s & _mask) == k:
                 for a, b in ms[i]:
@@ -150,8 +150,8 @@ class VerifyCheck:
         return False
 
     def in_check(self, state):
-        white = position.white_turn(state)
-        return self.illegal_check(moves.Move.pass_turn(white).apply(state))
+        white = pos.white_turn(state)
+        return self.illegal_check(core.moves.Move.pass_turn(white).apply(state))
 
 _vc = VerifyCheck()
 illegal_check1 = _vc.illegal_check
@@ -162,17 +162,17 @@ class VerifyCheck2:
     def __init__(self):
         captures_rev = _l2_64()
         for move in _am:
-            if move.piece is position.king:
+            if move.piece is pos.king:
                 continue
             if move.capture:
                 a, b, c, d = move.get4()
                 captures_rev[move.white][move.end].append((a, b))
         import incheck
-        self.white = incheck.IllegalCheck(captures_rev[True], position.bits_king_black)
-        self.black = incheck.IllegalCheck(captures_rev[False], position.bits_king_white)
+        self.white = incheck.IllegalCheck(captures_rev[True], pos.bits_king_black)
+        self.black = incheck.IllegalCheck(captures_rev[False], pos.bits_king_white)
 
     def illegal_check(self, state):
-        white = position.white_turn(state)
+        white = pos.white_turn(state)
 
         if white:
             return self.white.illegal_check(state)

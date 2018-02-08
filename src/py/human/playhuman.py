@@ -1,8 +1,8 @@
 import sys
-import position
-import moves
-import searchmoves
-import display
+
+import core.moves
+import core.searchmoves as sm
+import human.display
 
 class Human:
     def __init__(self, white):
@@ -48,11 +48,12 @@ class Human:
                 pass
 
     def choose_move(self, gs):
-        ms = searchmoves.legal_moves(gs.state) + [moves.Move.resign(), moves.Move.undo()]
+        extra_moves = [core.moves.Move.resign(), core.moves.Move.undo()]
+        ms = sm.searchmoves.legal_moves(gs.state) + extra_moves
         self.out.write('Turn ' + str((gs.turn + 1) // 2) + '\n')
         if len(gs.moves) > 0:
             self.out.write('\nPrevious move: ' + gs.moves[-1].name + '\n')
-        display.print_all(gs.state, out = self.out, size = 3)
+        human.display.print_all(gs.state, out = self.out, size = 3)
         self.display_moves(gs, ms)
         k = self.read(len(ms))
         return ms[k]

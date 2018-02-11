@@ -1,6 +1,6 @@
 import ai.evaluator
 import ai.gametree
-import position
+import core.position
 
 class MinMax:
     def __init__(self, evaluator, depth = 3):
@@ -54,8 +54,7 @@ class MinMaxQuiescent:
     def recurse(self, tree, n):
         t = tree.tree
         turn = t.turn(n)
-        if (turn >= self.thresh2) or
-                ((turn >= self.thresh1) and (t.noisy(n) == 0)):
+        if (turn >= self.thresh2) or ((turn >= self.thresh1) and (t.noisy(n) == 0)):
             self.evaluator(tree, n)
         else:
             tree.expand_children(n)

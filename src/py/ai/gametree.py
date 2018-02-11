@@ -1,6 +1,6 @@
-import position
+import core.position
+import core.legalmoves
 import cstate
-import legalmoves
 import clegalmoves
 
 class GameTree:

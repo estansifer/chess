@@ -19,7 +19,7 @@ cdef class Eval1:
 
     cdef evaluate(self, GameTree tree, int n):
         cdef int value, i, piece
-        mpz_set(self.temp, self.tree.states[n].state)
+        mpz_set(self.temp, tree.states[n].state)
 
         value = 0
 

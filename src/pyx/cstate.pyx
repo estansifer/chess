@@ -49,6 +49,7 @@ cdef class GameTree:
 
     cdef next_state_id(self):
         cdef int i = self.statelist.next()
+        self.states = self.statelist.states
 
         # Initialize
         self.states[i].turn = -1

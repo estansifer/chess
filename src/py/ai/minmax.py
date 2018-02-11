@@ -1,11 +1,12 @@
 import random
+import time
+
 import ai.treesearch
 import ai.gametree
 import ai.evaluator
-import position
-import moves
-import searchmoves
-import time
+import core.position
+import core.moves
+import core.legalmoves
 
 class AIGreedy:
     def __init__(self, white, evaluator, name):
@@ -33,7 +34,7 @@ class AIGreedy:
             best_value = 10 ** 9
             better = lambda a, b : a < b
 
-        ms = searchmoves.legal_moves(state)
+        ms = core.legalmoves.moves.legalmoves(state)
         random.shuffle(ms)
         for move in ms:
             k = t.find_state(move.apply(gs.state), gs.turn + 1)

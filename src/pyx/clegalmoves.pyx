@@ -32,6 +32,9 @@ cdef class Check:
         self.bits_king = bits_king
         self.bit_turn = bit_turn
 
+    def set_state_py(self, object state):
+        mpz_set(self.state, MPZ(state))
+
     def set_state(self, GameTree tree, int n):
         mpz_set(self.state, tree.states[n].state)
 
@@ -87,7 +90,7 @@ cdef class MoveNoCheck:
         cdef int i
         for i in range(n):
             mpz_init_set(self.captures[2 * i], MPZ(captures[i][0]))
-            mpz_init_set(self.captures[2 * i] + 1, MPZ(captures[i][1]))
+            mpz_init_set(self.captures[2 * i + 1], MPZ(captures[i][1]))
 
         mpz_init2(self.result, 64 + 360)
         mpz_init2(self.temp, 64 + 360)
@@ -111,6 +114,9 @@ cdef class MoveNoCheck:
         return 1
 
     def __dealloc__(self):
+        cdef int i
+        for i in range(2 * self.num_captures):
+            mpz_clear(self.captures[i])
         PyMem_Free(self.captures)
         mpz_clear(self.check_mask)
         mpz_clear(self.check_result)
@@ -125,22 +131,28 @@ cdef class CastleMove:
         self.castle = castle
         self.move_int1 = move_int1
         self.move_int2 = move_int2
+        mpz_init2(self.state, 64 + 360)
         mpz_init2(self.result, 64 + 360)
+
+    def is_legal(self, object state):
+        mpz_set(self.state, MPZ(state))
+        return self.move(self.state) == 1
 
     # Returns 1 if the castle move is legal and does not go into check, 0 otherwise.
     # If the return value is 1, then the new state is in self.result.
     cdef int move(self, mpz_t state):
+        if self.castle.move(state) == 0:
+            return 0
         if self.move_int1.move(state) == 0:
             return 0
         if self.move_int2.move(state) == 0:
-            return 0
-        if self.castle.move(state) == 0:
             return 0
         mpz_set(self.result, self.castle.result)
 
         return 1
 
     def __dealloc__(self):
+        mpz_clear(self.state)
         mpz_clear(self.result)
 
 # An instance of this class represents all possible legal moves of one color in chess,
@@ -261,11 +273,9 @@ def add_children(GameTree tree, int parent, LegalMoves white, LegalMoves black):
     if tree.states[parent].num_children != -1:
         return
 
-    cdef LegalMoves moves
     if tree.states[parent].turn & 1 == 0:
-        moves = black
+        black.expand_children(tree.states[parent].state)
+        tree.assign_children(parent, black.child_states, black.num_children)
     else:
-        moves = white
-
-    moves.expand_children(tree.states[parent].state)
-    tree.assign_children(parent, moves.child_states, moves.num_children)
+        white.expand_children(tree.states[parent].state)
+        tree.assign_children(parent, white.child_states, white.num_children)

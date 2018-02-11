@@ -2,7 +2,7 @@ import sys
 import os.path
 
 import core.position as pos
-import core.searchmoves
+import core.legalmoves
 import logger
 import timer
 
@@ -72,12 +72,12 @@ class Game:
             with self.timers[white]:
                 move = self.players[white].choose_move(gscopy)
 
-            if move.is_resignation:
+            if move.is_resignation():
                 self.over = True
                 self.winner = not white
                 break
 
-            if move.is_undo:
+            if move.is_undo():
                 self.gs.rewind(2)
             else:
                 self.gs.apply(move)
@@ -89,9 +89,9 @@ class Game:
                 self.draw = True
                 break
 
-            if len(core.searchmoves.legal_moves(self.gs.state)) == 0:
+            if len(core.legalmoves.moves.legalmoves(self.gs.state)) == 0:
                 self.over = True
-                if not core.searchmoves.in_check(self.gs.state):
+                if not core.legalmoves.moves.in_check(self.gs.state):
                     self.draw = True
                 else:
                     self.winner = white

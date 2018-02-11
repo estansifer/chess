@@ -1,5 +1,6 @@
 import random
-import searchmoves
+
+import core.legalmoves
 
 class AIRandom:
     def __init__(self, white):
@@ -7,7 +8,7 @@ class AIRandom:
         self.name = 'AIRandom'
 
     def choose_move(self, gs):
-        return random.choice(searchmoves.legal_moves(gs.state))
+        return random.choice(core.legalmoves.moves.legalmoves(gs.state))
 
     def game_over(self, game):
         pass

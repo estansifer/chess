@@ -13,11 +13,10 @@ import os.path
 import json
 import sys
 
-import position
-import moves
-import searchmoves
+import core.position
+import core.moves
 import cevaluator
-import legalmoves
+import core.legalmoves
 
 def filename(category, index):
     return os.path.join(os.path.dirname(sys.argv[0]), '..', '..',
@@ -52,10 +51,10 @@ class CEval1:
         values['king'] = [10 ** 6] * 64
 
         reg_pieces = [
-                    (position.bishop, 320, 0.15),
-                    (position.knight, 300, 0.15),
-                    (position.rook, 500, 0.05),
-                    (position.queen, 900, 0.01)
+                    (core.position.bishop, 320, 0.15),
+                    (core.position.knight, 300, 0.15),
+                    (core.position.rook, 500, 0.05),
+                    (core.position.queen, 900, 0.01)
                 ]
 
         move_counts = {}
@@ -92,7 +91,7 @@ class CEval1:
 
     def prep(self):
         values = [[0 for j in range(16)] for i in range(64)]
-        for piece in position.pieces:
+        for piece in core.position.pieces:
             for row in range(8):
                 for col in range(8):
                     i = row * 8 + col

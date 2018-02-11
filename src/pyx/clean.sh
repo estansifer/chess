@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mv *c *so build old
+mv *c *so old

@@ -14,11 +14,9 @@ class Move:
         self.capture = None
         self.white = None
         self.name = name
-        self.is_resignation = (name == 'Resign')
-        self.is_undo = (name == 'Undo')
 
     def check(self, bit, one):
-        if (one == 1) or (one is True):
+        if one:
             self.check1(bit)
         else:
             self.check0(bit)
@@ -38,7 +36,7 @@ class Move:
         self.check_result   = (self.check_result & (~mask)) | bits
 
     def set(self, bit, one):
-        if (one == 1) or (one is True):
+        if one:
             self.set1(bit)
         else:
             self.set0(bit)
@@ -197,6 +195,12 @@ class Move:
     def undo():
         return Move('Undo')
 
+    def is_resignation(self):
+        return self.name == 'Resign'
+
+    def is_undo(self):
+        return self.name == 'Undo'
+
     def pass_turn(white):
         self = Move('pass')
 
@@ -273,7 +277,7 @@ class Move:
         return (state & (~self.set_zero)) | self.set_one
 
     def get4(self):
-        return (self.check_mask, self.check_result, ~self.set_zero, self.set_one)
+        return (self.check_mask, self.check_result, mask_state & (~self.set_zero), self.set_one)
 
 # Except castling
 class BuildMoves:

@@ -67,3 +67,13 @@ class Logger:
         self.choose_path()
         with open(self.path, 'w') as f:
             json.dump(self.to_json(), f, indent = ' ')
+
+    def load(filename):
+        with open(filename, 'r') as f:
+            j = json.load(f)
+            self = Logger()
+            self.players = j['players']
+            self.moves = j['moves']
+            self.result = j['result']
+            self.notes = j['notes']
+            return self

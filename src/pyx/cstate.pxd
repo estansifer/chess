@@ -2,12 +2,16 @@
 
 from gmpy2 cimport *
 
+from gmp_funcs cimport *
+
 # Represents a single possible board state
 #   state           a bit vector representing the state
 #   turn            turn number (1 means White's first move is about to happen)
 #   value           valuation assigned to this state
 #   quality         quality of the valuation
-#   child           ID of the first 
+#   child           ID of the first child state
+#   sibling         ID of the next child state which has the same parent as this state
+#   num_children    number of children of this state (-2 if none, -1 if unknown)
 cdef struct State:
     mpz_t state
     int turn

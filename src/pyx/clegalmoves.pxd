@@ -37,6 +37,7 @@ cdef class CastleMove:
     cdef MoveNoCheck castle
     cdef MoveNoCheck move_int1
     cdef MoveNoCheck move_int2
+    cdef mpz_t state
     cdef mpz_t result
 
     cdef int move(self, mpz_t state)

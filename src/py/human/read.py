@@ -43,8 +43,10 @@ def read_intrange(message, N, fin = None, fout = None):
     line = readline(message, validator, fin, fout).strip()
     return int(line)
 
-def wait(message = 'Press return to continue\n'):
+def wait(message = 'Press return to continue or (q) to quit\n'):
     if message is not None:
         sys.stdout.write(message)
         sys.stdout.flush()
-    sys.stdin.readline()
+    line = sys.stdin.readline().strip().lower()
+    if len(line) > 0 and line[0] == 'q':
+        sys.exit(0)

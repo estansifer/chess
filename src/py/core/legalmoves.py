@@ -5,6 +5,11 @@ import clegalmoves
 
 allmoves = core.moves.allmoves.moves
 
+#
+# Stores all legal moves of the specified color, including castle moves.
+# Also stores legal opposing moves that could capture this color's king,
+# for the purpose of testing legality of moves.
+#
 class MovesOneColor:
     def __init__(self, white):
         self.white = white
@@ -32,7 +37,7 @@ class MovesOneColor:
 
     def init_castles(self):
         self.castle_king = self.init_castle(True)
-        self.castle_queen = self.init_castle(True)
+        self.castle_queen = self.init_castle(False)
 
     def init_castle(self, kingside):
         castle, inbetweens = core.moves.Move.castle(kingside, self.white)
@@ -62,7 +67,7 @@ class Moves:
         for move in allmoves:
             if move.is_legal(state):
                 new_state = move.apply(state)
-                if not self.in_check(new_state):
+                if not self.illegal_check(new_state):
                     result.append(move)
 
         if self.white.castle_king.is_legal(state):
@@ -78,17 +83,17 @@ class Moves:
 
     def illegal_check(self, state):
         if pos.white_turn(state):
-            check = self.white.check
-        else:
             check = self.black.check
+        else:
+            check = self.white.check
         check.set_state_py(state)
         return check.illegal_check()
 
     def in_check(self, state):
         if pos.white_turn(state):
-            check = self.black.check
-        else:
             check = self.white.check
+        else:
+            check = self.black.check
         check.set_state_py(state)
         return check.in_check()
 

@@ -1,11 +1,29 @@
 import random
 import sys
+import gmpy2
 
 import core.game
 import players
 import human.display
 import human.read
 import logger
+
+usage_str = """
+python run.py usage
+    Display this message.
+
+python run.py play
+    Play a game of chess.
+
+python run.py display <state>
+    Given an integer representing a chess-board state, display it.
+
+python run.py replay <filename>
+    Replay a chess game that was logged in the specified file.
+"""
+
+def usage(args):
+    print(usage_str)
 
 def play(args):
     def print_player_list():
@@ -37,13 +55,16 @@ def play(args):
 def display(args):
     assert(len(args) == 1)
 
-    state = int(args[0])
+    state = gmpy2.mpz(int(args[0]))
     human.display.print_all(state, extra = True)
 
 def replay(args):
     assert(len(args) == 1)
 
     log = logger.Logger.load(args[0])
+
+    print('White:', log.players['white'])
+    print('Black:', log.players['black'])
 
     for move in log.moves:
         print('Turn {}: {}'.format(move['turn'], move['move']))
@@ -54,16 +75,18 @@ def replay(args):
 commands = {
             'play' : play,
             'display' : display,
-            'replay' : replay
+            'replay' : replay,
+            'usage' : usage
         }
 
-default_command = play
+default_command = usage
 
 def run():
     if len(sys.argv) == 1:
         default_command([])
     elif len(sys.argv) > 1:
-        command = commands[sys.argv[1].lower().strip()]
+        command_name = sys.argv[1].lower().strip()
+        command = commands.get(command_name, default_command)
         command(sys.argv[2:])
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import sys
 
 import core.position as pos
+import core.legalmoves
 
 def display_piece(color_piece):
     if color_piece == 0:
@@ -93,16 +94,18 @@ def display_extra_bits(state, extra = False):
     else:
         return status + 'Can castle: ' + castling + more
 
-def print_board(state, white = '.', black = ' ', size = 2, out = sys.stdout):
+def print_board(state, white = '.', black = ' ', size = 3, out = sys.stdout):
     board = display_board(state, white, black, size)
     for row in board:
         out.write((' ' * 8) + row + '\n')
     out.write('\n')
     out.flush()
 
-def print_all(state, white = '.', black = ' ', size = 2, out = sys.stdout, extra = False):
+def print_all(state, white = '.', black = ' ', size = 3, out = sys.stdout, extra = False):
     print_board(state, white, black, size)
     out.write(display_extra_bits(state, extra) + '\n\n')
+    print('In check:', core.legalmoves.moves.in_check(state))
+    print('White\'s turn?', core.position.white_turn(state))
     out.flush()
 
 if __name__ == "__main__":

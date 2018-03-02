@@ -7,7 +7,7 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from gmp_funcs cimport *
 from cstate cimport GameTree
 
-# An instance of this class checks for whether a specific color king is in check
+# An instance of this class checks for whether the specified color king is in check
 # (or is illegally capturable)
 cdef class Check:
     def __cinit__(self, object mpzss, int bits_king, int bit_turn):

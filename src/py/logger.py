@@ -1,6 +1,7 @@
 import sys
 import os.path
 import json
+import gmpy2
 
 logging_dir = os.path.join(os.path.dirname(sys.argv[0]), '..', '..', 'logs')
 
@@ -67,6 +68,7 @@ class Logger:
         self.choose_path()
         with open(self.path, 'w') as f:
             json.dump(self.to_json(), f, indent = ' ')
+        print('Replay saved to "' + self.path + '".')
 
     def load(filename):
         with open(filename, 'r') as f:
@@ -76,4 +78,8 @@ class Logger:
             self.moves = j['moves']
             self.result = j['result']
             self.notes = j['notes']
+
+            for move in self.moves:
+                move['state'] = gmpy2.mpz(move['state'])
+
             return self

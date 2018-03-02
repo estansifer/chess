@@ -9,11 +9,11 @@ class MinMax:
         self.depth = depth
 
     def evaluate(self, tree, n):
-        self.recurse(self, tree, n, self.depth)
+        self.recurse(tree, n, self.depth)
 
     def recurse(self, tree, n, depth):
         if depth == 0:
-            self.evaluator(tree, n)
+            self.evaluator.evaluate(tree, n)
         else:
             tree.expand_children(n)
             t = tree.tree
@@ -55,7 +55,7 @@ class MinMaxQuiescent:
         t = tree.tree
         turn = t.turn(n)
         if (turn >= self.thresh2) or ((turn >= self.thresh1) and (t.noisy(n) == 0)):
-            self.evaluator(tree, n)
+            self.evaluator.evaluate(tree, n)
         else:
             tree.expand_children(n)
 

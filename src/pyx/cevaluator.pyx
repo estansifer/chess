@@ -17,7 +17,7 @@ cdef class Eval1:
 
         mpz_init2(self.temp, 64 + 360)
 
-    cdef evaluate(self, GameTree tree, int n):
+    def evaluate(self, GameTree tree, int n):
         cdef int value, i, piece
         mpz_set(self.temp, tree.states[n].state)
 

@@ -36,6 +36,5 @@ cdef class GameTree:
     cdef mp_bitcnt_t bit_captured
 
     cdef next_state_id(self)
-    cdef clear_states(self)
     cdef assign_children(self, int parent, mpz_t* children, int num_children)
     cdef add_state_c(self, mpz_t state, int turn)

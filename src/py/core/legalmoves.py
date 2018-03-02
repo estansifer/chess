@@ -24,7 +24,8 @@ class MovesOneColor:
         self.captures_rev = [[] for i in range(64)]
 
         for move in allmoves:
-            if move.capture and (not (move.piece is pos.king)) and (move.white != self.white):
+            # if move.capture and (not (move.piece is pos.king)) and (move.white != self.white):
+            if move.capture and (move.white != self.white):
                 a, b, c, d = move.get4()
                 self.captures_rev[move.end].append((a, b))
 

@@ -22,11 +22,11 @@ class AIGreedy:
         t = self.tree.tree
         t.clear_states()
         n = t.add_state(gs.state, gs.turn)
-        self.evaluator(self.tree, n)
+        self.evaluator.evaluate(self.tree, n)
 
         print("Current board value: ", t.value(n))
 
-        best_move = moves.Move.resign()
+        best_move = core.moves.Move.resign()
         if self.white:
             best_value = -(10 ** 9)
             better = lambda a, b : a > b
@@ -34,7 +34,7 @@ class AIGreedy:
             best_value = 10 ** 9
             better = lambda a, b : a < b
 
-        ms = core.legalmoves.moves.legalmoves(state)
+        ms = core.legalmoves.moves.legalmoves(gs.state)
         random.shuffle(ms)
         for move in ms:
             k = t.find_state(move.apply(gs.state), gs.turn + 1)
@@ -54,16 +54,18 @@ class AIGreedy:
     def game_over(self, game):
         print("Total time used (s): ", self.total_time)
 
+flat_eval = ai.evaluator.CEval1()
+
 def ai_minmax(white):
     return AIGreedy(
             white,
-            ai.treesearch.MinMax,
+            ai.treesearch.MinMax(flat_eval, 3),
             'AI_MinMax_3_S_0'
         )
 
 def ai_minmax_quiescent(white):
     return AIGreedy(
             white,
-            ai.treesearch.MinMaxQuiescent,
+            ai.treesearch.MinMaxQuiescent(flat_eval, 3, 8),
             'AI_MinMaxQuiescent_3_8_S_0'
         )

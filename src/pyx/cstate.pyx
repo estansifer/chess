@@ -61,7 +61,7 @@ cdef class GameTree:
 
         return i
 
-    cdef clear_states(self):
+    def clear_states(self):
         self.statelist.clear()
 
     cdef assign_children(self, int parent, mpz_t* children, int num_children):

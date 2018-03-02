@@ -61,7 +61,7 @@ class CEval1:
         for piece, a, b in reg_pieces:
             move_counts[piece.name] = [0] * 64
 
-        for move in moves.allmoves.moves:
+        for move in core.moves.allmoves.moves:
             if (move.piece.name in move_counts) and move.white:
                 move_counts[move.piece.name][move.start] += 1
 
@@ -80,6 +80,8 @@ class CEval1:
                 else:
                     v = a + a * b * (k - least) / (most - least)
                 values[piece.name][i] = int(v)
+
+        values['pawn'] = [0] * 64
 
         pcolmult = [1.00, 1.10, 1.20, 1.30, 1.30, 1.20, 1.10, 1.00]
         prowmult = [1.00, 1.00, 1.10, 1.25, 1.45, 1.90, 2.50, 1.00]

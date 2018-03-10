@@ -9,10 +9,13 @@ class Player:
 
 random      = Player('AIRandom', ai.random.AIRandom)
 human       = Player('Human', human.playhuman.Human)
-minmax      = Player('AIMinMax', ai.minmax.ai_minmax)
-minmaxq     = Player('AIMinMaxQ', ai.minmax.ai_minmax_quiescent)
+minmax3     = Player('AIMinMax_3', ai.minmax.ai_minmax(3))
+minmax4     = Player('AIMinMax_4', ai.minmax.ai_minmax(4))
+minmaxq46   = Player('AIMinMaxQ_4_6', ai.minmax.ai_minmax_quiescent(4, 6))
+minmaxq48   = Player('AIMinMaxQ_4_8', ai.minmax.ai_minmax_quiescent(4, 8))
+minmaxq38   = Player('AIMinMaxQ_3_8', ai.minmax.ai_minmax_quiescent(3, 8))
 
-players = [human, random, minmax, minmaxq]
+players = [human, random, minmax3, minmax4, minmaxq46, minmaxq48, minmaxq38]
 
 def normalize_name(name):
     name = name.lower()

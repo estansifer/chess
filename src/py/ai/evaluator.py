@@ -85,9 +85,9 @@ class CEval1:
 
         pcolmult = [1.00, 1.10, 1.20, 1.30, 1.30, 1.20, 1.10, 1.00]
         prowmult = [1.00, 1.00, 1.10, 1.25, 1.45, 1.90, 2.50, 1.00]
-        for i in range(8):
-            for j in range(8):
-                values['pawn'][j * 8 + i] = int(100 * pcolmult[i] * prowmult[j])
+        for row in range(8):
+            for col in range(8):
+                values['pawn'][row * 8 + col] = int(100 * pcolmult[col] * prowmult[row])
 
         return values
 
@@ -100,9 +100,9 @@ class CEval1:
                     i_ = (7 - row) * 8 + col
                     v = self.params[piece.name][i]
                     values[i][piece.bits(True) & 0b1111] = v
-                    values[i_][piece.bits(False) & 0b1111] = v
+                    values[i_][piece.bits(False) & 0b1111] = -v
 
-        self.ceval = cevaluator.Eval1(values)
+        self.ceval = cevaluator.Eval1(values, core.position.bits_turn)
 
     def evaluate(self, tree, n):
         self.ceval.evaluate(tree.tree, n)
@@ -113,10 +113,8 @@ class GameOverEval:
         t = tree.tree
         if t.child(n) == -2:
             if tree.in_check(n):
-                if t.turn(n) % 2 == 0:
-                    t.set_value(n, 10 ** 8, 10 ** 8)
-                else:
-                    t.set_value(n, -(10 ** 8), 10 ** 8)
-            t.set_value(n, 0, 10 ** 8)
+                t.set_value(n, -(10 ** 8), 10 ** 8)
+            else:
+                t.set_value(n, 0, 10 ** 8)
 
 gameover = GameOverEval()

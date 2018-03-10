@@ -7,7 +7,7 @@ from gmp_funcs cimport *
 from cstate cimport GameTree
 
 cdef class Eval1:
-    def __cinit__(self, object pv):
+    def __cinit__(self, object pv, int bit_turn):
         self.piece_values = <int **>PyMem_Malloc(64 * sizeof(int *))
         cdef int i, j
         for i in range(64):
@@ -16,6 +16,8 @@ cdef class Eval1:
                 self.piece_values[i][j] = int(pv[i][j])
 
         mpz_init2(self.temp, 64 + 360)
+
+        self.bit_turn = bit_turn
 
     def evaluate(self, GameTree tree, int n):
         cdef int value, i, piece
@@ -31,6 +33,9 @@ cdef class Eval1:
             value += self.piece_values[i][piece]
 
             mpz_fdiv_q_2exp(self.temp, self.temp, 5)
+
+        if mpz_tstbit(tree.states[n].state, self.bit_turn) == 0:
+            value = -value
 
         tree.states[n].value = value
         tree.states[n].quality = 2

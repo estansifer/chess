@@ -129,7 +129,7 @@ cdef class GameTree:
         self.states[n].quality = quality
 
     def noisy(self, int n):
-        return mpz_tstbit(self.states[n].state, self.bit_captured)
+        return mpz_tstbit(self.states[n].state, self.bit_captured) == 1
 
     def number_nodes(self):
         return self.statelist.num_states

@@ -341,7 +341,7 @@ class BuildMoves:
                 else:
                     add(Move.basic_move(p, a, a + 16, True, False))
                     for new in promos:
-                        add(Move.promote(a, a + 8, False, False, new))
+                        add(Move.promote(a, a - 8, False, False, new))
 
                 if j > 0:
                     if i < 6:

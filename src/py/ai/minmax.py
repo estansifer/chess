@@ -26,13 +26,8 @@ class AIGreedy:
 
         print("Current board value: ", t.value(n))
 
+        best_value = 10 ** 9
         best_move = core.moves.Move.resign()
-        if self.white:
-            best_value = -(10 ** 9)
-            better = lambda a, b : a > b
-        else:
-            best_value = 10 ** 9
-            better = lambda a, b : a < b
 
         ms = core.legalmoves.moves.legalmoves(gs.state)
         random.shuffle(ms)
@@ -40,32 +35,37 @@ class AIGreedy:
             k = t.find_state(move.apply(gs.state), gs.turn + 1)
             if k >= 0:
                 value = t.value(k)
-                if better(value, best_value):
+                if value < best_value:
                     best_value = value
                     best_move = move
 
         end = time.process_time()
         self.total_time += (end - start)
 
-        print("Nodes examined: ", t.number_nodes())
+        print("Nodes examined: ", t.number_nodes(), t.number_nodes() / (end - start))
 
         return best_move
 
     def game_over(self, game):
         print("Total time used (s): ", self.total_time)
 
+    def __call__(self, white):
+        self.white = white
+        return self
+
 flat_eval = ai.evaluator.CEval1()
 
-def ai_minmax(white):
+def ai_minmax(depth = 4):
     return AIGreedy(
-            white,
-            ai.treesearch.MinMax(flat_eval, 3),
-            'AI_MinMax_3_S_0'
+            None,
+            ai.treesearch.MinMax(flat_eval, depth),
+            'AI_MinMax_{}'.format(depth)
         )
 
-def ai_minmax_quiescent(white):
+
+def ai_minmax_quiescent(depth = 3, noisy_depth = 8):
     return AIGreedy(
-            white,
-            ai.treesearch.MinMaxQuiescent(flat_eval, 3, 8),
-            'AI_MinMaxQuiescent_3_8_S_0'
+            None,
+            ai.treesearch.MinMaxQuiescent(flat_eval, depth, noisy_depth),
+            'AI_MinMaxQuiescent_{}_{}'.format(depth, noisy_depth)
         )
